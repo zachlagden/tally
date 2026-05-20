@@ -2,10 +2,15 @@ import React from "react";
 import { Box, Text } from "ink";
 import type { ScanResult, LanguageStat, FileStat } from "../types.js";
 import { formatNumber, formatCompact, formatDuration, bar, padLeft, padRight, truncateMiddle } from "../util/format.js";
+import { LANG_BY_ID } from "../languages.js";
 import { basename } from "node:path";
 
-const BAR_WIDTH = 24;
-const NAME_WIDTH = 14;
+const BAR_WIDTH = 18;
+const NAME_WIDTH = 13;
+const PCT_WIDTH = 5;
+const LINES_WIDTH = 8;
+const FILES_WIDTH = 5;
+const SYM_WIDTH = 5;
 
 export function StaticSummary({ result, showSymbols }: { result: ScanResult; showSymbols: boolean }) {
   const root = result.root;
@@ -20,6 +25,7 @@ export function StaticSummary({ result, showSymbols }: { result: ScanResult; sho
       <Header projectName={projectName} root={root} result={result} />
 
       <SectionTitle label="Languages" />
+      <ColumnHeaders showSymbols={anySymbols} />
       {result.languages.map((lang) => (
         <LanguageRow
           key={lang.id}
@@ -29,7 +35,7 @@ export function StaticSummary({ result, showSymbols }: { result: ScanResult; sho
           showSymbols={anySymbols}
         />
       ))}
-      <TotalsRow result={result} showSymbols={anySymbols} />
+      <TotalsRow result={result} showSymbols={anySymbols} totalLines={totalCode} />
 
       {result.largestFiles.length > 0 && (
         <>
@@ -72,7 +78,7 @@ function Header({ projectName, root, result }: { projectName: string; root: stri
         <Text color="magentaBright" bold>{"▌ "}</Text>
         <Text bold color="whiteBright">tally  </Text>
         <Text bold>{projectName}</Text>
-        <Text dimColor>  {truncateMiddle(root, 60)}</Text>
+        <Text dimColor>  {truncateMiddle(root, 56)}</Text>
       </Text>
       <Text>
         <Text dimColor>{"  "}</Text>
@@ -89,11 +95,36 @@ function Header({ projectName, root, result }: { projectName: string; root: stri
 }
 
 function SectionTitle({ label }: { label: string }) {
-  const ruleWidth = Math.max(0, 80 - label.length - 4);
+  const ruleWidth = Math.max(0, 76 - label.length - 4);
   return (
     <Text>
       <Text bold color="cyanBright">{label}</Text>
       <Text dimColor>{"  " + "─".repeat(ruleWidth)}</Text>
+    </Text>
+  );
+}
+
+function ColumnHeaders({ showSymbols }: { showSymbols: boolean }) {
+  return (
+    <Text dimColor>
+      <Text>{padRight("", NAME_WIDTH)}</Text>
+      <Text>{padRight("", BAR_WIDTH)}</Text>
+      <Text>{"  "}</Text>
+      <Text>{padLeft("%", PCT_WIDTH)}</Text>
+      <Text>{"  "}</Text>
+      <Text>{padLeft("lines", LINES_WIDTH)}</Text>
+      <Text>{"  "}</Text>
+      <Text>{padLeft("files", FILES_WIDTH)}</Text>
+      {showSymbols && (
+        <>
+          <Text>{"  "}</Text>
+          <Text>{padLeft("fns", SYM_WIDTH)}</Text>
+          <Text>{"  "}</Text>
+          <Text>{padLeft("cls", SYM_WIDTH)}</Text>
+          <Text>{"  "}</Text>
+          <Text>{padLeft("vars", SYM_WIDTH)}</Text>
+        </>
+      )}
     </Text>
   );
 }
@@ -106,36 +137,37 @@ function LanguageRow({ lang, maxLines, totalLines, showSymbols }: {
 }) {
   const pct = totalLines > 0 ? (lang.codeLines / totalLines) * 100 : 0;
   const barStr = bar(lang.codeLines, maxLines, BAR_WIDTH);
+  const meta = LANG_BY_ID.get(lang.id);
+  const hasSymbolParser = meta?.parser === "tree-sitter" || meta?.parser === "regex";
+  const symCell = (n: number) => hasSymbolParser ? padLeft(formatNumber(n), SYM_WIDTH) : padLeft("·", SYM_WIDTH);
   return (
     <Text>
       <Text color={lang.color}>{padRight(lang.name, NAME_WIDTH)}</Text>
       <Text color={lang.color}>{barStr}</Text>
       <Text>{"  "}</Text>
-      <Text>{padLeft(`${pct.toFixed(1)}%`, 5)}</Text>
+      <Text>{padLeft(`${pct.toFixed(1)}%`, PCT_WIDTH)}</Text>
       <Text>{"  "}</Text>
-      <Text>{padLeft(formatNumber(lang.codeLines), 8)}</Text>
-      <Text dimColor> LOC </Text>
-      <Text>{padLeft(formatNumber(lang.files), 5)}</Text>
-      <Text dimColor> files</Text>
+      <Text>{padLeft(formatNumber(lang.codeLines), LINES_WIDTH)}</Text>
+      <Text>{"  "}</Text>
+      <Text dimColor>{padLeft(formatNumber(lang.files), FILES_WIDTH)}</Text>
       {showSymbols && (
         <>
-          <Text>{padLeft(formatNumber(lang.symbols.functions), 6)}</Text>
-          <Text dimColor> fns</Text>
-          <Text>{padLeft(formatNumber(lang.symbols.classes), 5)}</Text>
-          <Text dimColor> cls</Text>
-          <Text>{padLeft(formatNumber(lang.symbols.variables), 6)}</Text>
-          <Text dimColor> var</Text>
+          <Text>{"  "}</Text>
+          {hasSymbolParser ? <Text>{padLeft(formatNumber(lang.symbols.functions), SYM_WIDTH)}</Text> : <Text dimColor>{padLeft("·", SYM_WIDTH)}</Text>}
+          <Text>{"  "}</Text>
+          {hasSymbolParser ? <Text>{padLeft(formatNumber(lang.symbols.classes), SYM_WIDTH)}</Text> : <Text dimColor>{padLeft("·", SYM_WIDTH)}</Text>}
+          <Text>{"  "}</Text>
+          {hasSymbolParser ? <Text>{padLeft(formatNumber(lang.symbols.variables), SYM_WIDTH)}</Text> : <Text dimColor>{padLeft("·", SYM_WIDTH)}</Text>}
         </>
       )}
     </Text>
   );
 }
 
-function TotalsRow({ result, showSymbols }: { result: ScanResult; showSymbols: boolean }) {
+function TotalsRow({ result, showSymbols, totalLines }: { result: ScanResult; showSymbols: boolean; totalLines: number }) {
   const totalFns = result.languages.reduce((s, l) => s + l.symbols.functions, 0);
   const totalCls = result.languages.reduce((s, l) => s + l.symbols.classes, 0);
   const totalVar = result.languages.reduce((s, l) => s + l.symbols.variables, 0);
-  const totalCode = result.languages.reduce((s, l) => s + l.codeLines, 0);
   const totalFiles = result.languages.reduce((s, l) => s + l.files, 0);
   return (
     <Box marginTop={1}>
@@ -143,20 +175,19 @@ function TotalsRow({ result, showSymbols }: { result: ScanResult; showSymbols: b
         <Text bold>{padRight("Total", NAME_WIDTH)}</Text>
         <Text dimColor>{"·".repeat(BAR_WIDTH)}</Text>
         <Text>{"  "}</Text>
-        <Text>{padLeft("100%", 5)}</Text>
+        <Text dimColor>{padLeft("100%", PCT_WIDTH)}</Text>
         <Text>{"  "}</Text>
-        <Text bold>{padLeft(formatNumber(totalCode), 8)}</Text>
-        <Text dimColor> LOC </Text>
-        <Text bold>{padLeft(formatNumber(totalFiles), 5)}</Text>
-        <Text dimColor> files</Text>
+        <Text bold>{padLeft(formatNumber(totalLines), LINES_WIDTH)}</Text>
+        <Text>{"  "}</Text>
+        <Text bold>{padLeft(formatNumber(totalFiles), FILES_WIDTH)}</Text>
         {showSymbols && (
           <>
-            <Text bold>{padLeft(formatNumber(totalFns), 6)}</Text>
-            <Text dimColor> fns</Text>
-            <Text bold>{padLeft(formatNumber(totalCls), 5)}</Text>
-            <Text dimColor> cls</Text>
-            <Text bold>{padLeft(formatNumber(totalVar), 6)}</Text>
-            <Text dimColor> var</Text>
+            <Text>{"  "}</Text>
+            <Text bold>{padLeft(formatNumber(totalFns), SYM_WIDTH)}</Text>
+            <Text>{"  "}</Text>
+            <Text bold>{padLeft(formatNumber(totalCls), SYM_WIDTH)}</Text>
+            <Text>{"  "}</Text>
+            <Text bold>{padLeft(formatNumber(totalVar), SYM_WIDTH)}</Text>
           </>
         )}
       </Text>
@@ -174,7 +205,7 @@ function FileRow({ file, index, metricLabel, metricValue, showFns }: {
   return (
     <Text>
       <Text dimColor>{padLeft(`${index}.`, 3)}{" "}</Text>
-      <Text>{padRight(truncateMiddle(file.path, 52), 53)}</Text>
+      <Text>{padRight(truncateMiddle(file.path, 50), 51)}</Text>
       <Text>{padLeft(formatNumber(metricValue), 7)}</Text>
       <Text dimColor> {metricLabel}</Text>
       {showFns && file.symbols.functions > 0 && (

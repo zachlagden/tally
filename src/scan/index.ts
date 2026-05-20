@@ -7,6 +7,9 @@ import { walk } from "./walk.js";
 import { classifyByPath } from "./classify.js";
 import { readAndCount } from "./readFile.js";
 import { buildResult } from "./aggregate.js";
+import { parseFile } from "../parsers/index.js";
+
+const MAX_SYMBOL_FILE_BYTES = 200 * 1024;
 
 export async function scan(options: ScanOptions): Promise<ScanResult> {
   const started = performance.now();
@@ -34,7 +37,16 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
             return;
           }
           const absPath = join(root, rel);
-          const { metrics } = await readAndCount(absPath, langId);
+          const { metrics, source } = await readAndCount(absPath, langId);
+          let symbols = emptySymbols();
+          let complexity = 0;
+          let parseError: string | undefined;
+          if (options.includeSymbols && metrics.bytes <= MAX_SYMBOL_FILE_BYTES) {
+            const parsed = await parseFile(langId, source);
+            symbols = parsed.symbols;
+            complexity = parsed.complexity;
+            parseError = parsed.parseError;
+          }
           fileStats.push({
             path: rel,
             absPath,
@@ -45,8 +57,9 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
             codeLines: metrics.codeLines,
             blankLines: metrics.blankLines,
             commentLines: metrics.commentLines,
-            symbols: emptySymbols(),
-            complexity: 0,
+            symbols,
+            complexity,
+            ...(parseError ? { parseError } : {}),
           });
         } catch {
           // unreadable file — silently skip
