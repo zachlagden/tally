@@ -2,6 +2,7 @@ import { LANG_BY_ID } from "../languages.js";
 import type { SymbolCounts } from "../types.js";
 import { emptySymbols } from "../types.js";
 import { parseSymbols as treeSitterParse } from "./treeSitter.js";
+import { regexParse } from "./regex.js";
 
 export interface ParseResult {
   symbols: SymbolCounts;
@@ -17,7 +18,7 @@ export async function parseFile(languageId: string, source: string): Promise<Par
     case "tree-sitter":
       return treeSitterParse(languageId, source);
     case "regex":
-      // TODO(phase 10): wire regex fallback parsers
+      if (lang.regexParser) return regexParse(lang.regexParser, source);
       return { symbols: emptySymbols(), complexity: 0 };
     case "lines-only":
     default:

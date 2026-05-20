@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { existsSync, statSync } from "node:fs";
 import { scan } from "./scan/index.js";
 import { StaticSummary } from "./ui/StaticSummary.js";
+import { App } from "./ui/App.js";
 import { toJson } from "./output/json.js";
 import { toCsv } from "./output/csv.js";
 
@@ -24,26 +25,57 @@ program
   .option("--lang <ids>", "comma-separated language ids to restrict to", (v) => v.split(",").map((s) => s.trim()))
   .action(async (pathArg: string | undefined, opts) => {
     const wantsMachine = opts.json || opts.csv;
+    const wantsInteractive = !!opts.interactive || (!pathArg && !wantsMachine);
 
-    if (!pathArg && !wantsMachine) {
-      // TODO(phase 7): launch folder picker TUI
-      console.error("Folder-picker TUI not yet wired in this build. Pass a path: `tally ./some-folder`");
-      process.exit(1);
+    const scanOptions = {
+      topN: opts.top ?? 10,
+      includeSymbols: opts.symbols !== false,
+      includeGit: opts.git !== false,
+      ...(opts.lang ? { languages: opts.lang } : {}),
+    };
+
+    // Interactive path: picker (optional) + scan + interactive results
+    if (wantsInteractive) {
+      if (!process.stdin.isTTY) {
+        if (pathArg) {
+          // Fallback: render static summary when interactive can't run
+          // (e.g. CI logs, pipes)
+        } else {
+          console.error("tally: interactive TUI requires a TTY. Pass a folder path: `tally ./some-folder`");
+          process.exit(1);
+        }
+      }
+      const initialPath = pathArg ? resolve(pathArg) : undefined;
+      if (initialPath && (!existsSync(initialPath) || !statSync(initialPath).isDirectory())) {
+        console.error(`tally: not a directory: ${initialPath}`);
+        process.exit(1);
+      }
+      if (!process.stdin.isTTY && pathArg) {
+        const target = resolve(pathArg);
+        const result = await scan({ root: target, ...scanOptions });
+        const { waitUntilExit } = render(
+          <StaticSummary result={result} showSymbols={opts.symbols !== false} />,
+          { exitOnCtrlC: true }
+        );
+        await waitUntilExit();
+        return;
+      }
+      const { waitUntilExit } = render(
+        <App {...(initialPath ? { initialPath } : {})} scanOptions={scanOptions} />,
+        { exitOnCtrlC: true }
+      );
+      await waitUntilExit();
+      return;
     }
 
+    // Non-interactive path: scan once, then render static / json / csv
     const target = pathArg ? resolve(pathArg) : process.cwd();
     if (!existsSync(target) || !statSync(target).isDirectory()) {
       console.error(`tally: not a directory: ${target}`);
       process.exit(1);
     }
 
-    const result = await scan({
-      root: target,
-      topN: opts.top ?? 10,
-      includeSymbols: opts.symbols !== false,
-      includeGit: opts.git !== false,
-      ...(opts.lang ? { languages: opts.lang } : {}),
-    });
+    const result = await scan({ root: target, ...scanOptions });
 
     if (opts.json) {
       process.stdout.write(toJson(result) + "\n");

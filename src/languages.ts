@@ -263,8 +263,7 @@ export const LANGUAGES: Language[] = [
     color: "#e34c26",
     extensions: [".html", ".htm"],
     blockComment: ["<!--", "-->"],
-    parser: "tree-sitter",
-    treeSitterGrammar: "html",
+    parser: "lines-only",
   },
   {
     id: "css",
@@ -272,8 +271,7 @@ export const LANGUAGES: Language[] = [
     color: "#563d7c",
     extensions: [".css"],
     blockComment: ["/*", "*/"],
-    parser: "tree-sitter",
-    treeSitterGrammar: "css",
+    parser: "lines-only",
   },
   {
     id: "scss",
@@ -291,8 +289,7 @@ export const LANGUAGES: Language[] = [
     color: "#292929",
     extensions: [".json", ".jsonc"],
     filenames: ["package.json", "tsconfig.json"],
-    parser: "tree-sitter",
-    treeSitterGrammar: "json",
+    parser: "lines-only",
   },
   {
     id: "yaml",
@@ -300,8 +297,7 @@ export const LANGUAGES: Language[] = [
     color: "#cb171e",
     extensions: [".yaml", ".yml"],
     lineComment: "#",
-    parser: "tree-sitter",
-    treeSitterGrammar: "yaml",
+    parser: "lines-only",
   },
   {
     id: "toml",
@@ -309,8 +305,7 @@ export const LANGUAGES: Language[] = [
     color: "#9c4221",
     extensions: [".toml"],
     lineComment: "#",
-    parser: "tree-sitter",
-    treeSitterGrammar: "toml",
+    parser: "lines-only",
   },
   {
     id: "markdown",

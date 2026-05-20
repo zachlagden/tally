@@ -8,6 +8,7 @@ import { classifyByPath } from "./classify.js";
 import { readAndCount } from "./readFile.js";
 import { buildResult } from "./aggregate.js";
 import { parseFile } from "../parsers/index.js";
+import { gatherGitInsights } from "../git/insights.js";
 
 const MAX_SYMBOL_FILE_BYTES = 200 * 1024;
 
@@ -71,6 +72,9 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     )
   );
 
+  const git = options.includeGit ? await gatherGitInsights(root) : undefined;
   const durationMs = performance.now() - started;
-  return buildResult(root, fileStats, durationMs, options.topN);
+  const result = buildResult(root, fileStats, durationMs, options.topN);
+  if (git) result.git = git;
+  return result;
 }

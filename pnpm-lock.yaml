@@ -26,15 +26,9 @@ importers:
       ink-gradient:
         specifier: ^4.0.0
         version: 4.0.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))
-      ink-select-input:
-        specifier: ^6.2.0
-        version: 6.2.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6)
       ink-spinner:
         specifier: ^5.0.0
         version: 5.0.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6)
-      ink-text-input:
-        specifier: ^6.0.0
-        version: 6.0.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6)
       p-limit:
         specifier: ^6.1.0
         version: 6.2.0
@@ -739,10 +733,6 @@ packages:
       picomatch:
         optional: true
 
-  figures@6.1.0:
-    resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
-    engines: {node: '>=18'}
-
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
 
@@ -787,13 +777,6 @@ packages:
     peerDependencies:
       ink: '>=6'
 
-  ink-select-input@6.2.0:
-    resolution: {integrity: sha512-304fZXxkpYxJ9si5lxRCaX01GNlmPBgOZumXXRnPYbHW/iI31cgQynqk2tRypGLOF1cMIwPUzL2LSm6q4I5rQQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      ink: '>=5.0.0'
-      react: '>=18.0.0'
-
   ink-spinner@5.0.0:
     resolution: {integrity: sha512-EYEasbEjkqLGyPOUc8hBJZNuC5GvXGMLu0w5gdTNskPc7Izc5vO3tdQEYnzvshucyGCBXc86ig0ujXPMWaQCdA==}
     engines: {node: '>=14.16'}
@@ -809,13 +792,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  ink-text-input@6.0.0:
-    resolution: {integrity: sha512-Fw64n7Yha5deb1rHY137zHTAbSTNelUKuB5Kkk2HACXEtwIHBCf9OH2tP/LQ9fRYTl1F0dZgbW0zPnZk6FA9Lw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      ink: '>=5'
-      react: '>=18'
 
   ink@7.0.3:
     resolution: {integrity: sha512-5kxHkIj9+RuqCU3zyvP4qvYWNOSHP2TW/SHayHGHOmk87KwfVcZwvJGemi9ch+ci2gXUqerK/Eh2DGEDt5q45g==}
@@ -857,10 +833,6 @@ packages:
   is-number@3.0.0:
     resolution: {integrity: sha512-4cboCqIpliH+mAvFNegjZQ4kgKc3ZUhQVr3HvWbSh5q3WH2v82ct+T2Y1hdU5Gdtorx/cLifQjqCbL7bpznLTg==}
     engines: {node: '>=0.10.0'}
-
-  is-unicode-supported@2.1.0:
-    resolution: {integrity: sha512-mE00Gnza5EEB3Ds0HfMyllZzbBrmLOX3vfWoj9A9PEnTfratQ/BcaJOuMhnkhjXvb2+FkY3VuHqtAGpTPmglFQ==}
-    engines: {node: '>=18'}
 
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
@@ -1117,10 +1089,6 @@ packages:
     resolution: {integrity: sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==}
     engines: {node: '>=14.0.0'}
 
-  to-rotated@1.0.0:
-    resolution: {integrity: sha512-KsEID8AfgUy+pxVRLsWp0VzCa69wxzUDZnzGbyIST/bcgcrMvTYoFBX/QORH4YApoD89EDuUovx4BTdpOn319Q==}
-    engines: {node: '>=18'}
-
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
@@ -1153,10 +1121,6 @@ packages:
   type-fest@1.4.0:
     resolution: {integrity: sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==}
     engines: {node: '>=10'}
-
-  type-fest@4.41.0:
-    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
-    engines: {node: '>=16'}
 
   type-fest@5.6.0:
     resolution: {integrity: sha512-8ZiHFm91orbSAe2PSAiSVBVko18pbhbiB3U9GglSzF/zCGkR+rxpHx6sEMCUm4kxY4LjDIUGgCfUMtwfZfjfUA==}
@@ -1749,10 +1713,6 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.4
 
-  figures@6.1.0:
-    dependencies:
-      is-unicode-supported: 2.1.0
-
   fix-dts-default-cjs-exports@1.0.1:
     dependencies:
       magic-string: 0.30.21
@@ -1793,13 +1753,6 @@ snapshots:
       ink: 7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6)
       strip-ansi: 7.2.0
 
-  ink-select-input@6.2.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6):
-    dependencies:
-      figures: 6.1.0
-      ink: 7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6)
-      react: 19.2.6
-      to-rotated: 1.0.0
-
   ink-spinner@5.0.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6):
     dependencies:
       cli-spinners: 2.9.2
@@ -1809,13 +1762,6 @@ snapshots:
   ink-testing-library@4.0.0(@types/react@19.2.15):
     optionalDependencies:
       '@types/react': 19.2.15
-
-  ink-text-input@6.0.0(ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6))(react@19.2.6):
-    dependencies:
-      chalk: 5.6.2
-      ink: 7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6)
-      react: 19.2.6
-      type-fest: 4.41.0
 
   ink@7.0.3(@types/react@19.2.15)(react-devtools-core@6.1.5)(react@19.2.6):
     dependencies:
@@ -1876,8 +1822,6 @@ snapshots:
   is-number@3.0.0:
     dependencies:
       kind-of: 3.2.2
-
-  is-unicode-supported@2.1.0: {}
 
   joycon@3.1.1: {}
 
@@ -2123,8 +2067,6 @@ snapshots:
 
   tinyspy@3.0.2: {}
 
-  to-rotated@1.0.0: {}
-
   tree-kill@1.2.2: {}
 
   tree-sitter-wasms@0.1.13: {}
@@ -2160,8 +2102,6 @@ snapshots:
       - yaml
 
   type-fest@1.4.0: {}
-
-  type-fest@4.41.0: {}
 
   type-fest@5.6.0:
     dependencies:
