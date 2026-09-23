@@ -44,7 +44,7 @@ test("progress reaches the total exactly once and never exceeds it", async () =>
   expect(seen.filter(([current]) => current === total)).toHaveLength(1);
 });
 
-test.skipIf(process.getuid?.() === 0)("unreadable files are reported instead of silently dropped", async () => {
+test.skipIf(process.platform === "win32" || process.getuid?.() === 0)("unreadable files are reported instead of silently dropped", async () => {
   const root = makeTree({ "ok.ts": "const a = 1;\n", "locked.ts": "const b = 2;\n" });
   chmodSync(join(root, "locked.ts"), 0o000);
   const result = await scan({ root, ...baseOptions });

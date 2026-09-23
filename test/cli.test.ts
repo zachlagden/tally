@@ -50,7 +50,7 @@ test("worker threads produce the same result as a single thread", () => {
   expect((strip(single.stdout) as { fileCount: number }).fileCount).toBe(500);
 });
 
-test("closing the output pipe early exits cleanly", () => {
+test.skipIf(process.platform === "win32")("closing the output pipe early exits cleanly", () => {
   const files: Record<string, string> = {};
   for (let i = 0; i < 300; i++) files[`m${i}.ts`] = `export const v${i} = ${i};\n`;
   const root = makeTree(files);

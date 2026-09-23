@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  smoke:
+    name: smoke (${{ matrix.repo }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { repo: pallets/flask, ref: 3.0.3, language: python }
+          - { repo: expressjs/express, ref: 4.21.2, language: javascript }
+          - { repo: gin-gonic/gin, ref: v1.10.0, language: go }
+          - { repo: BurntSushi/ripgrep, ref: 14.1.1, language: rust }
+          - { repo: google/gson, ref: gson-parent-2.11.0, language: java }
+          - { repo: sinatra/sinatra, ref: v4.1.1, language: ruby }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          ref: ${{ matrix.ref }}
+          path: target
+          persist-credentials: false
+      - run: node scripts/smoke.mjs target ${{ matrix.language }}
