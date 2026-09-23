@@ -1,6 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { glob } from "tinyglobby";
 
 const BINARY_EXTS = new Set([
@@ -21,29 +20,28 @@ const IGNORED_DIRS = new Set([
   "coverage", ".nyc_output", ".parcel-cache",
 ]);
 
+const LOCKFILES = new Set([
+  "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
+  "bun.lock", "bun.lockb", "Cargo.lock", "poetry.lock", "uv.lock", "Pipfile.lock",
+  "composer.lock", "Gemfile.lock", "go.sum", "flake.lock", "packages.lock.json",
+  "mix.lock", "pubspec.lock", "Podfile.lock", "gradle.lockfile",
+]);
+
 const MINIFIED_RE = /\.min\.(js|css)$/i;
 
 export interface WalkResult {
   root: string;
   files: string[];
+  inGitRepo: boolean;
 }
 
 export async function walk(rootInput: string): Promise<WalkResult> {
   const root = resolve(rootInput);
 
-  let raw: string[];
-  if (existsSync(join(root, ".git"))) {
-    raw = await gitLsFiles(root);
-    if (raw.length === 0) raw = await globWalk(root);
-  } else {
-    raw = await globWalk(root);
-  }
-
-  const filtered: string[] = [];
-  for (const rel of raw) {
-    if (shouldKeep(rel)) filtered.push(rel);
-  }
-  return { root, files: filtered };
+  const inGitRepo = (await git(["rev-parse", "--is-inside-work-tree"], root))?.trim() === "true";
+  const listed = inGitRepo ? await gitLsFiles(root) : undefined;
+  const raw = listed ?? (await globWalk(root));
+  return { root, files: raw.filter(shouldKeep), inGitRepo };
 }
 
 function shouldKeep(relPath: string): boolean {
@@ -51,6 +49,7 @@ function shouldKeep(relPath: string): boolean {
   for (const seg of segments) {
     if (IGNORED_DIRS.has(seg)) return false;
   }
+  if (LOCKFILES.has(basename(relPath))) return false;
   if (MINIFIED_RE.test(relPath)) return false;
   const lastDot = relPath.lastIndexOf(".");
   if (lastDot >= 0) {
@@ -60,20 +59,19 @@ function shouldKeep(relPath: string): boolean {
   return true;
 }
 
-function gitLsFiles(root: string): Promise<string[]> {
+async function gitLsFiles(root: string): Promise<string[] | undefined> {
+  const out = await git(["ls-files", "-co", "--exclude-standard", "-z"], root);
+  return out === undefined ? undefined : out.split("\0").filter(Boolean);
+}
+
+function git(args: string[], cwd: string): Promise<string | undefined> {
   return new Promise((resolveP) => {
-    const proc = spawn("git", ["ls-files", "-co", "--exclude-standard", "-z"], {
-      cwd: root,
-      stdio: ["ignore", "pipe", "ignore"],
-    });
+    const proc = spawn("git", args, { cwd, stdio: ["ignore", "pipe", "ignore"] });
     const chunks: Buffer[] = [];
     proc.stdout.on("data", (c: Buffer) => chunks.push(c));
-    proc.on("error", () => resolveP([]));
+    proc.on("error", () => resolveP(undefined));
     proc.on("close", (code) => {
-      if (code !== 0) return resolveP([]);
-      const out = Buffer.concat(chunks).toString("utf8");
-      const files = out.split("\0").filter(Boolean);
-      resolveP(files);
+      resolveP(code === 0 ? Buffer.concat(chunks).toString("utf8") : undefined);
     });
   });
 }
@@ -82,7 +80,7 @@ async function globWalk(root: string): Promise<string[]> {
   return glob("**/*", {
     cwd: root,
     onlyFiles: true,
-    dot: false,
+    dot: true,
     followSymbolicLinks: false,
     expandDirectories: false,
   });

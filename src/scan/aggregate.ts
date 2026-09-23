@@ -1,4 +1,4 @@
-import type { FileStat, LanguageStat, ScanResult, SymbolCounts } from "../types.js";
+import type { FileStat, LanguageStat, ScanResult, SkippedFile, SymbolCounts } from "../types.js";
 import { emptySymbols } from "../types.js";
 import { LANG_BY_ID } from "../languages.js";
 
@@ -49,6 +49,7 @@ function addSymbols(into: SymbolCounts, from: SymbolCounts): void {
 export function buildResult(
   root: string,
   files: FileStat[],
+  skippedFiles: SkippedFile[],
   scanDurationMs: number,
   topN: number,
 ): ScanResult {
@@ -66,5 +67,6 @@ export function buildResult(
     files,
     largestFiles: largest,
     mostComplexFiles: complex,
+    skippedFiles,
   };
 }

@@ -1,80 +1,73 @@
-import { join } from "node:path";
-import pLimit from "p-limit";
-import { cpus } from "node:os";
-import type { FileStat, ScanOptions, ScanResult } from "../types.js";
-import { emptySymbols } from "../types.js";
+import { basename, extname, join } from "node:path";
+import type { FileStat, ScanOptions, ScanResult, SkippedFile } from "../types.js";
 import { walk } from "./walk.js";
 import { classifyByPath } from "./classify.js";
-import { readAndCount } from "./readFile.js";
 import { buildResult } from "./aggregate.js";
-import { parseFile } from "../parsers/index.js";
+import { processFile, type FileOutcome, type FileTask, type ProcessConfig } from "./processFile.js";
 import { gatherGitInsights } from "../git/insights.js";
 
-const MAX_SYMBOL_FILE_BYTES = 200 * 1024;
+const IN_PROCESS_CONCURRENCY = 16;
 
 export async function scan(options: ScanOptions): Promise<ScanResult> {
   const started = performance.now();
-  const { files: relPaths, root } = await walk(options.root);
+  const { files: relPaths, root, inGitRepo } = await walk(options.root);
   const langFilter = options.languages?.length ? new Set(options.languages) : undefined;
-  const concurrency = Math.max(4, cpus().length * 2);
-  const limit = pLimit(concurrency);
+
+  const tasks = buildTasks(root, relPaths, langFilter);
+  const config: ProcessConfig = {
+    includeSymbols: options.includeSymbols,
+    ...(langFilter ? { languages: [...langFilter] } : {}),
+  };
+
   const fileStats: FileStat[] = [];
+  const skippedFiles: SkippedFile[] = [];
+  const total = tasks.length;
   let processed = 0;
-  const total = relPaths.length;
 
-  await Promise.all(
-    relPaths.map((rel) =>
-      limit(async () => {
-        try {
-          const langId = classifyByPath(rel);
-          if (!langId) {
-            processed++;
-            options.onProgress?.(processed, total, rel);
-            return;
-          }
-          if (langFilter && !langFilter.has(langId)) {
-            processed++;
-            options.onProgress?.(processed, total, rel);
-            return;
-          }
-          const absPath = join(root, rel);
-          const { metrics, source } = await readAndCount(absPath, langId);
-          let symbols = emptySymbols();
-          let complexity = 0;
-          let parseError: string | undefined;
-          if (options.includeSymbols && metrics.bytes <= MAX_SYMBOL_FILE_BYTES) {
-            const parsed = await parseFile(langId, source);
-            symbols = parsed.symbols;
-            complexity = parsed.complexity;
-            parseError = parsed.parseError;
-          }
-          fileStats.push({
-            path: rel,
-            absPath,
-            language: langId,
-            bytes: metrics.bytes,
-            chars: metrics.chars,
-            lines: metrics.lines,
-            codeLines: metrics.codeLines,
-            blankLines: metrics.blankLines,
-            commentLines: metrics.commentLines,
-            symbols,
-            complexity,
-            ...(parseError ? { parseError } : {}),
-          });
-        } catch {
-          // unreadable file — silently skip
-        } finally {
-          processed++;
-          options.onProgress?.(processed, total, rel);
-        }
-      })
-    )
-  );
+  const record = (outcome: FileOutcome, rel?: string): void => {
+    if (outcome.kind === "stat") fileStats.push(outcome.stat);
+    else if (outcome.kind === "skipped") skippedFiles.push({ path: outcome.path, reason: outcome.reason });
+    processed++;
+    options.onProgress?.(processed, total, rel ?? (outcome.kind === "stat" ? outcome.stat.path : undefined));
+  };
 
-  const git = options.includeGit ? await gatherGitInsights(root) : undefined;
-  const durationMs = performance.now() - started;
-  const result = buildResult(root, fileStats, durationMs, options.topN);
+  const gitPromise = options.includeGit && inGitRepo ? gatherGitInsights(root) : Promise.resolve(undefined);
+
+  await runInProcess(tasks, config, record);
+
+  const git = await gitPromise;
+  fileStats.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  skippedFiles.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  const result = buildResult(root, fileStats, skippedFiles, performance.now() - started, options.topN);
   if (git) result.git = git;
   return result;
+}
+
+function buildTasks(root: string, relPaths: string[], langFilter: Set<string> | undefined): FileTask[] {
+  const tasks: FileTask[] = [];
+  for (const rel of relPaths) {
+    const language = classifyByPath(rel);
+    const absPath = join(root, rel);
+    if (language) {
+      if (!langFilter || langFilter.has(language)) tasks.push({ rel, absPath, language });
+    } else if (extname(basename(rel)) === "") {
+      tasks.push({ rel, absPath });
+    }
+  }
+  return tasks.sort((a, b) => (a.language ?? "").localeCompare(b.language ?? ""));
+}
+
+async function runInProcess(
+  tasks: FileTask[],
+  config: ProcessConfig,
+  record: (outcome: FileOutcome, rel?: string) => void,
+): Promise<void> {
+  let next = 0;
+  const lane = async (): Promise<void> => {
+    while (next < tasks.length) {
+      const task = tasks[next++]!;
+      record(await processFile(task, config), task.rel);
+    }
+  };
+  await Promise.all(Array.from({ length: IN_PROCESS_CONCURRENCY }, lane));
 }

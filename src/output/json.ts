@@ -25,6 +25,7 @@ export function toJson(result: ScanResult, pretty = true): string {
     })),
     largestFiles: result.largestFiles.map(serializeFile),
     mostComplexFiles: result.mostComplexFiles.map(serializeFile),
+    skippedFiles: result.skippedFiles,
     git: result.git,
   };
   return pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
@@ -44,5 +45,6 @@ function serializeFile(f: ScanResult["files"][number]) {
     classes: f.symbols.classes,
     variables: f.symbols.variables,
     complexity: f.complexity,
+    ...(f.symbolsSkipped ? { symbolsSkipped: true } : {}),
   };
 }

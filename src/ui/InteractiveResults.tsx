@@ -134,6 +134,9 @@ function Header({ projectName, root, result }: { projectName: string; root: stri
         <Text dimColor> chars · </Text>
         <Text color="greenBright">{formatDuration(result.scanDurationMs)}</Text>
       </Text>
+      {result.skippedFiles.length > 0 && (
+        <Text color="yellow">{`  ${formatNumber(result.skippedFiles.length)} file${result.skippedFiles.length === 1 ? "" : "s"} could not be read (see --json for details)`}</Text>
+      )}
     </Box>
   );
 }

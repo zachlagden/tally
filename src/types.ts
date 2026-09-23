@@ -17,7 +17,13 @@ export interface FileStat {
   commentLines: number;
   symbols: SymbolCounts;
   complexity: number;
+  symbolsSkipped?: boolean;
   parseError?: string;
+}
+
+export interface SkippedFile {
+  path: string;
+  reason: string;
 }
 
 export interface LanguageStat {
@@ -54,6 +60,7 @@ export interface ScanResult {
   files: FileStat[];
   largestFiles: FileStat[];
   mostComplexFiles: FileStat[];
+  skippedFiles: SkippedFile[];
   git?: GitInsights;
 }
 
