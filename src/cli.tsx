@@ -1,28 +1,57 @@
 import React from "react";
 import { render } from "ink";
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { resolve } from "node:path";
 import { existsSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
+import { LANG_BY_ID } from "./languages.js";
 import { scan } from "./scan/index.js";
 import { StaticSummary } from "./ui/StaticSummary.js";
 import { App } from "./ui/App.js";
 import { toJson } from "./output/json.js";
 import { toCsv } from "./output/csv.js";
 
+process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+  if (err.code === "EPIPE") process.exit(0);
+  throw err;
+});
+
+const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
+
+function parseCount(minimum: number) {
+  return (value: string): number => {
+    const n = Number(value);
+    if (!Number.isInteger(n) || n < minimum) {
+      throw new InvalidArgumentError(`expected a whole number of at least ${minimum}, got "${value}"`);
+    }
+    return n;
+  };
+}
+
+function parseLanguages(value: string): string[] {
+  const ids = value.split(",").map((s) => s.trim()).filter(Boolean);
+  const unknown = ids.filter((id) => !LANG_BY_ID.has(id));
+  if (ids.length === 0 || unknown.length > 0) {
+    const known = [...LANG_BY_ID.keys()].sort().join(", ");
+    throw new InvalidArgumentError(`unknown language id${unknown.length === 1 ? "" : "s"} "${unknown.join(", ")}". Known ids: ${known}`);
+  }
+  return ids;
+}
+
 const program = new Command();
 
 program
   .name("tally")
   .description("Beautiful, fast, multi-language code statistics")
-  .version("0.1.0")
+  .version(version)
   .argument("[path]", "directory to scan (omit for interactive folder picker)")
   .option("-i, --interactive", "force interactive TUI even when a path is given")
   .option("--json", "emit JSON to stdout (no ANSI)")
   .option("--csv", "emit CSV to stdout (no ANSI)")
   .option("--no-symbols", "skip tree-sitter symbol parsing (faster, lines only)")
   .option("--no-git", "skip git insights even when .git exists")
-  .option("--top <n>", "top-N count for largest/complex panels", (v) => parseInt(v, 10), 10)
-  .option("--lang <ids>", "comma-separated language ids to restrict to", (v) => v.split(",").map((s) => s.trim()))
+  .option("--top <n>", "top-N count for largest/complex panels", parseCount(1), 10)
+  .option("--lang <ids>", "comma-separated language ids to restrict to", parseLanguages)
   .action(async (pathArg: string | undefined, opts) => {
     const wantsMachine = opts.json || opts.csv;
     const wantsInteractive = !!opts.interactive || (!pathArg && !wantsMachine);

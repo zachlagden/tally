@@ -62,7 +62,7 @@ Lines-only (data / markup formats): JSON, YAML, TOML, HTML, CSS, Markdown, Docke
 | `--no-symbols`      | Skip tree-sitter parsing — lines only, much faster                |
 | `--no-git`          | Skip git insights even when `.git` exists                         |
 | `--top <n>`         | Top-N count for largest / most-complex panels (default 10)        |
-| `--lang <ids>`      | Comma-separated language ids to restrict to (e.g. `--lang js,ts`) |
+| `--lang <ids>`      | Comma-separated language ids to restrict to (e.g. `--lang javascript,typescript`) |
 | `--version`         | Print version                                                     |
 
 ## Interactive TUI keybindings

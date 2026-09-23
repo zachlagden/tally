@@ -32,6 +32,7 @@
     "dev": "tsup --watch --onSuccess \"node dist/cli.js\"",
     "build": "tsup",
     "start": "node dist/cli.js",
+    "pretest": "pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
