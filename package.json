@@ -1,7 +1,7 @@
 {
   "name": "@zachlagden/tally",
   "version": "0.1.0",
-  "description": "A beautiful, fast, multi-language code statistics CLI/TUI. Counts lines, characters, functions, classes, and variables across 15+ languages with tree-sitter accuracy.",
+  "description": "Code statistics for your terminal: lines, comments, functions, classes and complexity across 37 languages, counted with tree-sitter.",
   "keywords": [
     "cli",
     "tui",
@@ -14,7 +14,15 @@
     "tree-sitter"
   ],
   "license": "MIT",
-  "author": "Zach Lagden <zach@digigrow.uk>",
+  "homepage": "https://github.com/zachlagden/tally#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachlagden/tally.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zachlagden/tally/issues"
+  },
+  "author": "Zach Lagden <zach@zachlagden.uk>",
   "type": "module",
   "bin": {
     "tally": "./dist/cli.js"
