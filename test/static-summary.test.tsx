@@ -69,3 +69,17 @@ test("StaticSummary shows · for languages without symbol parser", () => {
   const jsonLine = lines.find((l) => l.includes("JSON"));
   expect(jsonLine).toMatch(/·/);
 });
+
+test("git footer uses singular labels for one contributor and one commit", () => {
+  const result = makeResult();
+  result.git = {
+    contributors: 1,
+    topContributor: { name: "Alex Example", commits: 1, percentage: 100 },
+    firstCommitDate: "2026-01-01T00:00:00Z",
+    commitCount: 1,
+    ageDays: 3,
+  };
+  const frame = render(<StaticSummary result={result} showSymbols={true} />).lastFrame() ?? "";
+  expect(frame).toContain("1 contributor ·");
+  expect(frame).toMatch(/1 commit$/m);
+});

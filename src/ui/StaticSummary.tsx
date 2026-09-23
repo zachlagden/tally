@@ -232,13 +232,13 @@ function GitFooter({ git }: { git: NonNullable<ScanResult["git"]> }) {
     <Text>
       <Text dimColor>repo · </Text>
       <Text bold>{git.contributors}</Text>
-      <Text dimColor> contributors · top: </Text>
+      <Text dimColor>{git.contributors === 1 ? " contributor" : " contributors"} · top: </Text>
       <Text bold>{git.topContributor.name}</Text>
       <Text dimColor> ({git.topContributor.percentage.toFixed(0)}%) · </Text>
       <Text>{ageStr}</Text>
       <Text dimColor> · </Text>
       <Text bold>{formatNumber(git.commitCount)}</Text>
-      <Text dimColor> commits</Text>
+      <Text dimColor>{git.commitCount === 1 ? " commit" : " commits"}</Text>
     </Text>
   );
 }
