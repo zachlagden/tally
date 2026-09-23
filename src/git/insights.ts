@@ -1,14 +1,10 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import type { GitInsights } from "../types.js";
 
 export async function gatherGitInsights(root: string): Promise<GitInsights | undefined> {
-  if (!existsSync(join(root, ".git"))) return undefined;
-
   const [shortlog, firstDate, commitCountStr] = await Promise.all([
-    run(["shortlog", "-sne", "--all", "HEAD"], root),
-    run(["log", "--reverse", "--format=%aI", "--max-count=1", "HEAD"], root),
+    run(["shortlog", "-sne", "HEAD"], root),
+    run(["log", "--max-parents=0", "--format=%aI", "HEAD"], root),
     run(["rev-list", "--count", "HEAD"], root),
   ]);
 
@@ -18,7 +14,7 @@ export async function gatherGitInsights(root: string): Promise<GitInsights | und
   if (contributors.length === 0) return undefined;
   const totalCommits = contributors.reduce((s, c) => s + c.commits, 0);
   const top = contributors[0]!;
-  const firstCommitDate = firstDate.trim().split(/\s+/)[0] ?? "";
+  const firstCommitDate = firstDate.trim().split(/\s+/).sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? "";
   const ageDays = firstCommitDate
     ? Math.max(0, Math.floor((Date.now() - new Date(firstCommitDate).getTime()) / (24 * 3600 * 1000)))
     : 0;
