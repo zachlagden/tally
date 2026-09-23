@@ -4,7 +4,7 @@
 
 ![CI](https://img.shields.io/github/actions/workflow/status/zachlagden/tally/ci.yml?branch=main&style=flat-square&label=ci)
 ![License](https://img.shields.io/github/license/zachlagden/tally?style=flat-square)
-![Node](https://img.shields.io/badge/node-%3E%3D20-339933?style=flat-square&logo=node.js&logoColor=white)
+![Node](https://img.shields.io/badge/node-%3E%3D22-339933?style=flat-square&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
 ![Languages](https://img.shields.io/badge/languages-37-blueviolet?style=flat-square)
 ![Stars](https://img.shields.io/github/stars/zachlagden/tally?style=flat-square)
@@ -42,7 +42,7 @@ complexity across 37 languages, counted from a real parse.**
 
 ## Installation
 
-Requires [Node.js](https://nodejs.org/) 20 or newer and [pnpm](https://pnpm.io/).
+Requires [Node.js](https://nodejs.org/) 22 or newer and [pnpm](https://pnpm.io/).
 
 tally isn't on npm yet. Install it from source:
 
@@ -190,7 +190,7 @@ The CLI tests run against `dist/`, so `pnpm test` builds first.
 
 ### Testing
 
-- **Unit and CLI tests** run on Linux, macOS and Windows against Node 20, 22 and 24.
+- **Unit and CLI tests** run on Linux, macOS and Windows against Node 22 and 24.
 - **Language fixtures.** One small program per supported language, with every line tagged by hand as code, comment or blank, and the expected function, class and variable counts. Known gaps are marked with `test.fails`, so fixing one turns the suite red until the marker is removed.
 - **Smoke tests** run tally on pinned releases of Flask, Express, Gin, ripgrep, Gson and Sinatra. Each checks the top language, that symbols were found, that nothing was skipped, and that single-threaded and worker-pool runs produce identical JSON.
 
