@@ -1,4 +1,4 @@
-export type ParserKind = "tree-sitter" | "regex" | "lines-only";
+export type ParserKind = "tree-sitter" | "regex" | "vue-sfc" | "lines-only";
 
 export interface Language {
   id: string;
@@ -243,8 +243,7 @@ export const LANGUAGES: Language[] = [
     extensions: [".vue"],
     lineComment: "//",
     blockComment: ["<!--", "-->"],
-    parser: "tree-sitter",
-    treeSitterGrammar: "vue",
+    parser: "vue-sfc",
   },
   {
     id: "bash",

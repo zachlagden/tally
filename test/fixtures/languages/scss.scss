@@ -1,0 +1,10 @@
+// Theme
+$primary: #333;
+
+@mixin rounded {
+  border-radius: 4px;
+}
+
+.button {
+  color: $primary;
+}

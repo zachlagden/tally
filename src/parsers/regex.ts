@@ -1,17 +1,33 @@
 import type { SymbolCounts } from "../types.js";
 import { emptySymbols } from "../types.js";
 
+type Counter = RegExp[] | ((source: string) => number);
+
 type Patterns = {
-  functions?: RegExp[];
-  classes?: RegExp[];
-  variables?: RegExp[];
-  branches?: RegExp[];
+  functions?: Counter;
+  classes?: Counter;
+  variables?: Counter;
+  branches?: Counter;
 };
 
+const HASKELL_KEYWORDS = new Set([
+  "module", "import", "where", "let", "in", "data", "type", "newtype", "class",
+  "instance", "deriving", "infix", "infixl", "infixr", "default", "foreign",
+]);
+
+function countHaskellFunctions(source: string): number {
+  const names = new Set<string>();
+  for (const [, name] of source.matchAll(/^([a-z_][\w']*)\s*::/gm)) names.add(name!);
+  for (const [, name] of source.matchAll(/^([a-z_][\w']*)\b[^\n=]*=(?!=)/gm)) {
+    if (!HASKELL_KEYWORDS.has(name!)) names.add(name!);
+  }
+  return names.size;
+}
+
 const HASKELL: Patterns = {
-  functions: [/^\s*([a-z_][\w']*)\s*::/m, /^\s*([a-z_][\w']*)\s+[^=]*=/m],
+  functions: countHaskellFunctions,
   classes: [/^\s*(data|newtype|type|class|instance)\s+[A-Z]/m],
-  branches: [/\bif\b|\bcase\b|\|/g],
+  branches: [/\bif\b|\bcase\b/g, /^\s+\|[^\n=]*=/gm],
 };
 
 const SQL: Patterns = {
@@ -22,7 +38,7 @@ const SQL: Patterns = {
 
 const R: Patterns = {
   functions: [/<-\s*function\s*\(/g, /=\s*function\s*\(/g],
-  variables: [/^\s*[a-zA-Z._][\w.]*\s*(<-|=)\s/gm],
+  variables: [/^\s*[a-zA-Z._][\w.]*\s*(?:<-|=)(?!\s*function\b)\s/gm],
   branches: [/\b(if|for|while)\b/g],
 };
 
@@ -60,8 +76,9 @@ export function regexParse(parserKey: string, source: string): { symbols: Symbol
   return { symbols, complexity: symbols.functions + symbols.branches };
 }
 
-function countAll(patterns: RegExp[] | undefined, source: string): number {
+function countAll(patterns: Counter | undefined, source: string): number {
   if (!patterns) return 0;
+  if (typeof patterns === "function") return patterns(source);
   let total = 0;
   for (const p of patterns) {
     const flags = p.flags.includes("g") ? p.flags : p.flags + "g";

@@ -223,15 +223,14 @@ QUERIES.kotlin = `
 
 QUERIES.scala = `
 (function_definition) @function
+(function_declaration) @function
 (class_definition) @class
 (object_definition) @class
 (trait_definition) @class
 (val_definition) @variable
 (var_definition) @variable
 (if_expression) @branch
-(for_expression) @branch
-(while_expression) @branch
-(match_expression) @branch
+(case_clause) @branch
 (catch_clause) @branch
 `;
 
@@ -258,24 +257,28 @@ QUERIES.dart = `
 `;
 
 QUERIES.lua = `
-(function_declaration) @function
+(function_definition_statement) @function
+(local_function_definition_statement) @function
 (function_definition) @function
-(variable_assignment) @variable
+(local_variable_declaration) @variable
 (if_statement) @branch
-(for_statement) @branch
-(for_in_statement) @branch
+(elseif_clause) @branch
+(for_generic_statement) @branch
+(for_numeric_statement) @branch
 (while_statement) @branch
 (repeat_statement) @branch
 `;
 
 QUERIES.elixir = `
-(call target: (identifier) @_def (#match? @_def "^(def|defp|defmacro)$")) @function
-(call target: (identifier) @_def (#match? @_def "^defmodule$")) @class
+(call target: (identifier) @_def (#match? @_def "^(def|defp|defmacro|defmacrop)$")) @function
+(call target: (identifier) @_def (#match? @_def "^(defmodule|defprotocol|defimpl)$")) @class
+(call target: (identifier) @_branch (#match? @_branch "^(if|unless|case|cond|with)$")) @branch
 `;
 
 QUERIES.ocaml = `
-(let_binding) @variable
-(value_definition (let_binding body: (fun_expression))) @function
+(value_definition (let_binding pattern: (_) . (parameter))) @function
+(value_definition (let_binding pattern: (_) . body: (fun_expression))) @function
+(value_definition (let_binding pattern: (value_name) . body: (_))) @variable
 (module_definition) @class
 (class_definition) @class
 (if_expression) @branch
@@ -315,11 +318,6 @@ QUERIES.solidity = `
 (for_statement) @branch
 (while_statement) @branch
 (catch_clause) @branch
-`;
-
-QUERIES.vue = `
-(script_element) @class
-(template_element) @class
 `;
 
 QUERIES.html = ``;
