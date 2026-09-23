@@ -1,6 +1,7 @@
 import type { FileStat, LanguageStat, ScanResult, SkippedFile, SymbolCounts } from "../types.js";
 import { emptySymbols } from "../types.js";
 import { LANG_BY_ID } from "../languages.js";
+import { readableColor } from "../util/color.js";
 
 export function aggregateLanguages(files: FileStat[]): LanguageStat[] {
   const byLang = new Map<string, LanguageStat>();
@@ -12,7 +13,7 @@ export function aggregateLanguages(files: FileStat[]): LanguageStat[] {
       agg = {
         id: f.language,
         name: meta?.name ?? f.language,
-        color: meta?.color ?? "#888888",
+        color: readableColor(meta?.color ?? "#888888"),
         files: 0,
         bytes: 0,
         chars: 0,
