@@ -70,6 +70,7 @@ export interface ScanOptions {
   includeSymbols: boolean;
   includeGit: boolean;
   languages?: string[];
+  threads?: number;
   onProgress?: (current: number, total: number, currentFile?: string) => void;
 }
 

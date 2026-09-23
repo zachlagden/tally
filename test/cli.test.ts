@@ -30,6 +30,26 @@ test("--version reports the package version", () => {
   expect(run.stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
 });
 
+test("worker threads produce the same result as a single thread", () => {
+  const files: Record<string, string> = {};
+  for (let i = 0; i < 400; i++) {
+    files[`src/m${i}.ts`] = `export function f${i}(x: number) {\n  if (x > ${i}) return x;\n  return ${i};\n}\n`;
+    if (i % 4 === 0) files[`py/m${i}.py`] = `def g${i}(x):\n    # note\n    return x\n`;
+  }
+  const root = makeTree(files);
+  const strip = (out: string) => {
+    const parsed = JSON.parse(out) as Record<string, unknown>;
+    delete parsed.scanDurationMs;
+    return parsed;
+  };
+  const single = tally(["--json", "--no-git", "--threads", "0", root]);
+  const pooled = tally(["--json", "--no-git", "--threads", "3", root]);
+  expect(single.status).toBe(0);
+  expect(pooled.status).toBe(0);
+  expect(strip(pooled.stdout)).toEqual(strip(single.stdout));
+  expect((strip(single.stdout) as { fileCount: number }).fileCount).toBe(500);
+});
+
 test("closing the output pipe early exits cleanly", () => {
   const files: Record<string, string> = {};
   for (let i = 0; i < 300; i++) files[`m${i}.ts`] = `export const v${i} = ${i};\n`;

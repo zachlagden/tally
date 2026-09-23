@@ -63,6 +63,7 @@ Lines-only (data / markup formats): JSON, YAML, TOML, HTML, CSS, Markdown, Docke
 | `--no-git`          | Skip git insights even when `.git` exists                         |
 | `--top <n>`         | Top-N count for largest / most-complex panels (default 10)        |
 | `--lang <ids>`      | Comma-separated language ids to restrict to (e.g. `--lang javascript,typescript`) |
+| `--threads <n>`     | Worker threads for parsing. `0` runs single-threaded. Default: picked from repo size and CPU count |
 | `--version`         | Print version                                                     |
 
 ## Interactive TUI keybindings
@@ -83,7 +84,7 @@ Lines-only (data / markup formats): JSON, YAML, TOML, HTML, CSS, Markdown, Docke
 2. Otherwise it walks with [`tinyglobby`](https://github.com/SuperchupuDev/tinyglobby), gitignore-aware.
 3. Binary files, lockfiles, minified bundles, `node_modules`, `dist`, `.git`, common cache dirs are skipped.
 4. Each file is read in parallel (`p-limit` at `cpus × 2`).
-5. Symbol parsing uses [`web-tree-sitter`](https://www.npmjs.com/package/web-tree-sitter) with WASM grammars from [`tree-sitter-wasms`](https://www.npmjs.com/package/tree-sitter-wasms) — no native compilation at install time. Files over 200 KB skip symbol parsing (generated / vendored content).
+5. Symbol parsing uses [`web-tree-sitter`](https://www.npmjs.com/package/web-tree-sitter) with WASM grammars from [`tree-sitter-wasms`](https://www.npmjs.com/package/tree-sitter-wasms) — no native compilation at install time. Files over 1 MB skip symbol parsing and are marked `symbolsSkipped` in JSON output. Large repos are parsed across worker threads; small ones run in-process to avoid thread start-up cost.
 
 Typical performance on a modern laptop:
 

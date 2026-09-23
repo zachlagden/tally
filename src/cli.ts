@@ -1,15 +1,14 @@
-import React from "react";
-import { render } from "ink";
 import { Command, InvalidArgumentError } from "commander";
 import { resolve } from "node:path";
 import { existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
+import { setFlagsFromString } from "node:v8";
 import { LANG_BY_ID } from "./languages.js";
 import { scan } from "./scan/index.js";
-import { StaticSummary } from "./ui/StaticSummary.js";
-import { App } from "./ui/App.js";
 import { toJson } from "./output/json.js";
 import { toCsv } from "./output/csv.js";
+
+setFlagsFromString("--liftoff-only");
 
 process.stdout.on("error", (err: NodeJS.ErrnoException) => {
   if (err.code === "EPIPE") process.exit(0);
@@ -52,6 +51,7 @@ program
   .option("--no-git", "skip git insights even when .git exists")
   .option("--top <n>", "top-N count for largest/complex panels", parseCount(1), 10)
   .option("--lang <ids>", "comma-separated language ids to restrict to", parseLanguages)
+  .option("--threads <n>", "worker threads for parsing (0 = single thread, default: auto)", parseCount(0))
   .action(async (pathArg: string | undefined, opts) => {
     const wantsMachine = opts.json || opts.csv;
     const wantsInteractive = !!opts.interactive || (!pathArg && !wantsMachine);
@@ -61,18 +61,13 @@ program
       includeSymbols: opts.symbols !== false,
       includeGit: opts.git !== false,
       ...(opts.lang ? { languages: opts.lang } : {}),
+      ...(opts.threads !== undefined ? { threads: opts.threads } : {}),
     };
 
-    // Interactive path: picker (optional) + scan + interactive results
     if (wantsInteractive) {
-      if (!process.stdin.isTTY) {
-        if (pathArg) {
-          // Fallback: render static summary when interactive can't run
-          // (e.g. CI logs, pipes)
-        } else {
-          console.error("tally: interactive TUI requires a TTY. Pass a folder path: `tally ./some-folder`");
-          process.exit(1);
-        }
+      if (!process.stdin.isTTY && !pathArg) {
+        console.error("tally: interactive TUI requires a TTY. Pass a folder path: `tally ./some-folder`");
+        process.exit(1);
       }
       const initialPath = pathArg ? resolve(pathArg) : undefined;
       if (initialPath && (!existsSync(initialPath) || !statSync(initialPath).isDirectory())) {
@@ -80,24 +75,16 @@ program
         process.exit(1);
       }
       if (!process.stdin.isTTY && pathArg) {
-        const target = resolve(pathArg);
-        const result = await scan({ root: target, ...scanOptions });
-        const { waitUntilExit } = render(
-          <StaticSummary result={result} showSymbols={opts.symbols !== false} />,
-          { exitOnCtrlC: true }
-        );
-        await waitUntilExit();
+        const result = await scan({ root: resolve(pathArg), ...scanOptions });
+        const { renderStatic } = await import("./ui/render.js");
+        await renderStatic(result, opts.symbols !== false);
         return;
       }
-      const { waitUntilExit } = render(
-        <App {...(initialPath ? { initialPath } : {})} scanOptions={scanOptions} />,
-        { exitOnCtrlC: true }
-      );
-      await waitUntilExit();
+      const { renderApp } = await import("./ui/render.js");
+      await renderApp(initialPath, scanOptions);
       return;
     }
 
-    // Non-interactive path: scan once, then render static / json / csv
     const target = pathArg ? resolve(pathArg) : process.cwd();
     if (!existsSync(target) || !statSync(target).isDirectory()) {
       console.error(`tally: not a directory: ${target}`);
@@ -115,11 +102,8 @@ program
       return;
     }
 
-    const { waitUntilExit } = render(
-      <StaticSummary result={result} showSymbols={opts.symbols !== false} />,
-      { exitOnCtrlC: true }
-    );
-    await waitUntilExit();
+    const { renderStatic } = await import("./ui/render.js");
+    await renderStatic(result, opts.symbols !== false);
   });
 
 program.parseAsync(process.argv).catch((err) => {

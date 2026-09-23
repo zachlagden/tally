@@ -1,14 +1,14 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/cli.tsx"],
+  entry: { cli: "src/cli.ts", worker: "src/scan/worker.ts" },
   format: ["esm"],
   target: "node20",
   outDir: "dist",
   clean: true,
   minify: false,
   sourcemap: true,
-  splitting: false,
+  splitting: true,
   shims: false,
   dts: false,
   external: ["web-tree-sitter", "tree-sitter-wasms"],

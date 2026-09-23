@@ -1,12 +1,15 @@
 import { basename, extname, join } from "node:path";
+import { availableParallelism } from "node:os";
 import type { FileStat, ScanOptions, ScanResult, SkippedFile } from "../types.js";
 import { walk } from "./walk.js";
 import { classifyByPath } from "./classify.js";
 import { buildResult } from "./aggregate.js";
 import { processFile, type FileOutcome, type FileTask, type ProcessConfig } from "./processFile.js";
+import { resolveWorkerPath, runInWorkers } from "./pool.js";
 import { gatherGitInsights } from "../git/insights.js";
 
 const IN_PROCESS_CONCURRENCY = 16;
+const MIN_TASKS_PER_WORKER = 150;
 
 export async function scan(options: ScanOptions): Promise<ScanResult> {
   const started = performance.now();
@@ -33,7 +36,13 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
   const gitPromise = options.includeGit && inGitRepo ? gatherGitInsights(root) : Promise.resolve(undefined);
 
-  await runInProcess(tasks, config, record);
+  const workerCount = chooseWorkerCount(options.threads, total, options.includeSymbols);
+  const workerPath = workerCount > 0 ? resolveWorkerPath() : undefined;
+  if (workerPath) {
+    await runInWorkers(workerPath, tasks, config, workerCount, (outcome) => record(outcome));
+  } else {
+    await runInProcess(tasks, config, record);
+  }
 
   const git = await gitPromise;
   fileStats.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
@@ -55,6 +64,14 @@ function buildTasks(root: string, relPaths: string[], langFilter: Set<string> | 
     }
   }
   return tasks.sort((a, b) => (a.language ?? "").localeCompare(b.language ?? ""));
+}
+
+function chooseWorkerCount(requested: number | undefined, taskCount: number, includeSymbols: boolean): number {
+  if (requested !== undefined) return requested;
+  const perWorker = includeSymbols ? MIN_TASKS_PER_WORKER : MIN_TASKS_PER_WORKER * 10;
+  const byWork = Math.floor(taskCount / perWorker);
+  if (byWork < 2) return 0;
+  return Math.min(byWork, Math.max(1, availableParallelism() - 1));
 }
 
 async function runInProcess(
