@@ -2,6 +2,7 @@
 
 <div align="center">
 
+![CI](https://img.shields.io/github/actions/workflow/status/zachlagden/tally/ci.yml?branch=main&style=flat-square&label=ci)
 ![License](https://img.shields.io/github/license/zachlagden/tally?style=flat-square)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933?style=flat-square&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
@@ -115,13 +116,15 @@ Fields are trimmed here. Files over 1 MB are still line-counted but skip symbol 
 ## Languages
 
 **Parsed with tree-sitter** (functions, classes, variables, complexity):
-TypeScript, TSX, JavaScript, Python, Go, Rust, Java, C, C++, C#, Ruby, PHP, Swift, Kotlin, Elixir, Solidity, Zig, Shell.
+TypeScript, TSX, JavaScript, Python, Go, Rust, Java, C, C++, C#, Ruby, PHP, Swift, Kotlin, Scala, Lua, Elixir, OCaml, Solidity, Zig, Shell, and Vue (its `<script>` block, with the JavaScript or TypeScript grammar).
 
 **Parsed with regex fallbacks:** Haskell, SQL, R, Perl, SCSS.
 
 **Line counts only:** JSON, YAML, TOML, HTML, CSS, Markdown, Dockerfile, Makefile.
 
-**Line counts now, symbols in progress:** Dart, Elm, Lua, Scala, OCaml and Vue. Their grammars or queries don't match the bundled tree-sitter runtime yet, so their symbol counts read zero.
+**Line counts now, symbols in progress:** Dart and Elm. Their grammars need a newer tree-sitter runtime than the one bundled, so their symbol counts read zero.
+
+Every language has a fixture in [`test/fixtures/languages`](test/fixtures/languages) with hand-checked line and symbol counts, and CI fails if any of them drift.
 
 Complexity is a cyclomatic-style score: one per function plus one per branch (`if`, loops, `case`, `catch`, ternaries).
 
@@ -165,7 +168,7 @@ cloc and tokei count lines: code, comments and blanks. tally counts those too, t
 <details>
 <summary><b>Why do some languages show no functions?</b></summary>
 
-Data and markup formats have none to count. Dart, Elm, Lua, Scala, OCaml and Vue should, and are listed under [Languages](#languages) as in progress.
+Data and markup formats have none to count. Dart and Elm should, and are listed under [Languages](#languages) as in progress.
 </details>
 
 <details>
@@ -184,6 +187,14 @@ pnpm typecheck
 ```
 
 The CLI tests run against `dist/`, so `pnpm test` builds first.
+
+### Testing
+
+- **Unit and CLI tests** run on Linux, macOS and Windows against Node 20, 22 and 24.
+- **Language fixtures.** One small program per supported language, with every line tagged by hand as code, comment or blank, and the expected function, class and variable counts. Known gaps are marked with `test.fails`, so fixing one turns the suite red until the marker is removed.
+- **Smoke tests** run tally on pinned releases of Flask, Express, Gin, ripgrep, Gson and Sinatra. Each checks the top language, that symbols were found, that nothing was skipped, and that single-threaded and worker-pool runs produce identical JSON.
+
+Run a smoke test locally with `node scripts/smoke.mjs <repo-dir> <language-id>` after `pnpm build`.
 
 ## Star history
 
