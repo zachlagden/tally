@@ -80,6 +80,7 @@ tally . -i             # interactive TUI for a given path
 | `--top <n>` | Rows in the largest and most complex file lists (default 10) |
 | `--lang <ids>` | Only count these languages, e.g. `--lang typescript,tsx`. An unknown id prints the valid ones |
 | `--threads <n>` | Worker threads for parsing. `0` runs on one thread. The default depends on repo size and CPU count |
+| `--parse-timeout <seconds>` | Give up on one file's symbols after this long (default 60). Its lines are still counted and it's listed in `symbolTimeouts`. Applies when parsing on worker threads |
 | `-V, --version` | Print the version |
 
 ### Interactive TUI keys
@@ -111,7 +112,7 @@ Run on this repo, `--json` prints totals, one entry per language, the largest an
 }
 ```
 
-Fields are trimmed here. Files over 1 MB are still line-counted but skip symbol parsing, and carry `"symbolsSkipped": true`.
+Fields are trimmed here. Files over 1 MB are still line-counted but skip symbol parsing, and carry `"symbolsSkipped": true`. So do files whose parse runs past `--parse-timeout`; those are also listed in `symbolTimeouts`.
 
 ## Languages
 

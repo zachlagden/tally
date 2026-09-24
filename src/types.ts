@@ -61,6 +61,7 @@ export interface ScanResult {
   largestFiles: FileStat[];
   mostComplexFiles: FileStat[];
   skippedFiles: SkippedFile[];
+  symbolTimeouts: string[];
   git?: GitInsights;
 }
 
@@ -71,6 +72,7 @@ export interface ScanOptions {
   includeGit: boolean;
   languages?: string[];
   threads?: number;
+  parseTimeoutMs?: number;
   onProgress?: (current: number, total: number, currentFile?: string) => void;
 }
 

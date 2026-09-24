@@ -137,6 +137,9 @@ function Header({ projectName, root, result }: { projectName: string; root: stri
       {result.skippedFiles.length > 0 && (
         <Text color="yellow">{`  ${formatNumber(result.skippedFiles.length)} file${result.skippedFiles.length === 1 ? "" : "s"} could not be read (see --json for details)`}</Text>
       )}
+      {result.symbolTimeouts.length > 0 && (
+        <Text color="yellow">{`  ${formatNumber(result.symbolTimeouts.length)} file${result.symbolTimeouts.length === 1 ? "" : "s"} took too long to parse; lines counted, symbols skipped (see --json)`}</Text>
+      )}
     </Box>
   );
 }

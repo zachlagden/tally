@@ -69,5 +69,6 @@ export function buildResult(
     largestFiles: largest,
     mostComplexFiles: complex,
     skippedFiles,
+    symbolTimeouts: [],
   };
 }

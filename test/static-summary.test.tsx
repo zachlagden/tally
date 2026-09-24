@@ -47,6 +47,7 @@ function makeResult(): ScanResult {
     largestFiles: [],
     mostComplexFiles: [],
     skippedFiles: [],
+    symbolTimeouts: [],
   };
 }
 

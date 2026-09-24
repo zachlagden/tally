@@ -58,3 +58,30 @@ test.skipIf(process.platform === "win32")("closing the output pipe early exits c
   expect(run.stderr).not.toMatch(/EPIPE/);
   expect(run.stdout).toHaveLength(10);
 });
+
+test("a file that exceeds --parse-timeout keeps its line counts and is listed in symbolTimeouts", () => {
+  const files: Record<string, string> = {};
+  for (let i = 0; i < 40; i++) {
+    files[`src/m${i}.ts`] = `export function f${i}(x: number) {\n  if (x > ${i}) return x;\n  return ${i};\n}\n`.repeat(40);
+  }
+  const root = makeTree(files);
+  const normal = tally(["--json", "--no-git", "--threads", "2", root]);
+  const rushed = tally(["--json", "--no-git", "--threads", "2", "--parse-timeout", "0.001", root]);
+  expect(normal.status).toBe(0);
+  expect(rushed.status).toBe(0);
+  const before = JSON.parse(normal.stdout) as { fileCount: number; totalLines: number; symbolTimeouts: string[] };
+  const after = JSON.parse(rushed.stdout) as { fileCount: number; totalLines: number; symbolTimeouts: string[] };
+  expect(before.symbolTimeouts).toEqual([]);
+  expect(after.symbolTimeouts.length).toBeGreaterThan(0);
+  expect(after.symbolTimeouts.every((path) => path.startsWith("src/m"))).toBe(true);
+  expect(after.fileCount).toBe(before.fileCount);
+  expect(after.totalLines).toBe(before.totalLines);
+});
+
+test("--parse-timeout rejects values that are not positive numbers", () => {
+  for (const bad of ["0", "-1", "soon"]) {
+    const run = tally(["--json", "--parse-timeout", bad, "."]);
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toMatch(/positive number of seconds/);
+  }
+});

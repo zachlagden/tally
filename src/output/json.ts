@@ -26,6 +26,7 @@ export function toJson(result: ScanResult, pretty = true): string {
     largestFiles: result.largestFiles.map(serializeFile),
     mostComplexFiles: result.mostComplexFiles.map(serializeFile),
     skippedFiles: result.skippedFiles,
+    symbolTimeouts: result.symbolTimeouts,
     git: result.git,
   };
   return pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);

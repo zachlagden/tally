@@ -27,6 +27,14 @@ function parseCount(minimum: number) {
   };
 }
 
+function parseSeconds(value: string): number {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    throw new InvalidArgumentError(`expected a positive number of seconds, got "${value}"`);
+  }
+  return seconds;
+}
+
 function parseLanguages(value: string): string[] {
   const ids = value.split(",").map((s) => s.trim()).filter(Boolean);
   const unknown = ids.filter((id) => !LANG_BY_ID.has(id));
@@ -52,6 +60,7 @@ program
   .option("--top <n>", "top-N count for largest/complex panels", parseCount(1), 10)
   .option("--lang <ids>", "comma-separated language ids to restrict to", parseLanguages)
   .option("--threads <n>", "worker threads for parsing (0 = single thread, default: auto)", parseCount(0))
+  .option("--parse-timeout <seconds>", "give up on symbols for a file after this long; its lines are still counted (worker threads only)", parseSeconds, 60)
   .action(async (pathArg: string | undefined, opts) => {
     const wantsMachine = opts.json || opts.csv;
     const wantsInteractive = !!opts.interactive || (!pathArg && !wantsMachine);
@@ -62,6 +71,7 @@ program
       includeGit: opts.git !== false,
       ...(opts.lang ? { languages: opts.lang } : {}),
       ...(opts.threads !== undefined ? { threads: opts.threads } : {}),
+      parseTimeoutMs: opts.parseTimeout * 1000,
     };
 
     if (wantsInteractive) {

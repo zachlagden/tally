@@ -9,6 +9,7 @@ import { resolveWorkerPath, runInWorkers } from "./pool.js";
 import { gatherGitInsights } from "../git/insights.js";
 
 const IN_PROCESS_CONCURRENCY = 16;
+export const DEFAULT_PARSE_TIMEOUT_MS = 60_000;
 const MIN_TASKS_PER_WORKER = 150;
 
 export async function scan(options: ScanOptions): Promise<ScanResult> {
@@ -24,6 +25,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
   const fileStats: FileStat[] = [];
   const skippedFiles: SkippedFile[] = [];
+  const timedOut: string[] = [];
   const total = tasks.length;
   let processed = 0;
 
@@ -39,7 +41,17 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const workerCount = chooseWorkerCount(options.threads, total, options.includeSymbols);
   const workerPath = workerCount > 0 ? resolveWorkerPath() : undefined;
   if (workerPath) {
-    await runInWorkers(workerPath, tasks, config, workerCount, (outcome) => record(outcome));
+    const symbolTimeouts: string[] = [];
+    await runInWorkers(workerPath, tasks, config, workerCount, options.parseTimeoutMs ?? DEFAULT_PARSE_TIMEOUT_MS, {
+      onOutcome: (outcome) => record(outcome),
+      onTimeout: async (task) => {
+        symbolTimeouts.push(task.rel);
+        const outcome = await processFile(task, { ...config, includeSymbols: false });
+        if (outcome.kind === "stat") outcome.stat.symbolsSkipped = true;
+        record(outcome, task.rel);
+      },
+    });
+    timedOut.push(...symbolTimeouts.sort());
   } else {
     await runInProcess(tasks, config, record);
   }
@@ -48,6 +60,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   fileStats.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   skippedFiles.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   const result = buildResult(root, fileStats, skippedFiles, performance.now() - started, options.topN);
+  result.symbolTimeouts = timedOut;
   if (git) result.git = git;
   return result;
 }
