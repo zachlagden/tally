@@ -2,13 +2,10 @@ import { Command, InvalidArgumentError } from "commander";
 import { resolve } from "node:path";
 import { existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
-import { setFlagsFromString } from "node:v8";
 import { LANG_BY_ID } from "./languages.js";
 import { scan } from "./scan/index.js";
 import { toJson } from "./output/json.js";
 import { toCsv } from "./output/csv.js";
-
-setFlagsFromString("--liftoff-only");
 
 process.stdout.on("error", (err: NodeJS.ErrnoException) => {
   if (err.code === "EPIPE") process.exit(0);

@@ -7,6 +7,7 @@ import { buildResult } from "./aggregate.js";
 import { processFile, type FileOutcome, type FileTask, type ProcessConfig } from "./processFile.js";
 import { resolveWorkerPath, runInWorkers } from "./pool.js";
 import { gatherGitInsights } from "../git/insights.js";
+import { chooseWasmTier } from "./wasmTier.js";
 
 const IN_PROCESS_CONCURRENCY = 16;
 export const DEFAULT_PARSE_TIMEOUT_MS = 60_000;
@@ -18,6 +19,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const langFilter = options.languages?.length ? new Set(options.languages) : undefined;
 
   const tasks = buildTasks(root, relPaths, langFilter);
+  if (options.includeSymbols) chooseWasmTier(tasks.length);
   const config: ProcessConfig = {
     includeSymbols: options.includeSymbols,
     ...(langFilter ? { languages: [...langFilter] } : {}),
