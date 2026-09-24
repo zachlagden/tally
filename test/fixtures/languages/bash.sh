@@ -7,3 +7,11 @@ greet() {
 }
 
 name="world"
+
+case "$name" in
+  world) greet "$name" ;;
+esac
+
+cat <<EOF
+hello $name
+EOF

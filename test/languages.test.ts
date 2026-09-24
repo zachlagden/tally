@@ -22,10 +22,7 @@ interface Expectation {
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const EXPECTED = JSON.parse(readFileSync(join(FIXTURES, "languages.expected.json"), "utf8")) as Expectation[];
 
-const KNOWN_ISSUES: Record<string, string> = {
-  dart: "grammar is tree-sitter ABI 15; web-tree-sitter 0.24 supports 13-14",
-  elm: "grammar fails to load in web-tree-sitter 0.24",
-};
+const KNOWN_ISSUES: Record<string, string> = {};
 
 let byLanguage: Map<string, FileStat>;
 

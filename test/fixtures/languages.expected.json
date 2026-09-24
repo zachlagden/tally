@@ -278,14 +278,14 @@
   {
     "language": "bash",
     "file": "bash.sh",
-    "lines": 9,
+    "lines": 17,
     "comment": 1,
-    "blank": 2,
-    "code": 6,
+    "blank": 4,
+    "code": 12,
     "functions": 1,
     "classes": 0,
     "variables": 1,
-    "complexity": 2
+    "complexity": 3
   },
   {
     "language": "html",

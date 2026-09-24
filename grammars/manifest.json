@@ -1,0 +1,28 @@
+{
+  "treeSitterCli": "0.26.8",
+  "grammars": [
+    { "grammar": "typescript", "package": "tree-sitter-typescript", "version": "0.23.2", "wasm": "tree-sitter-typescript.wasm" },
+    { "grammar": "tsx", "package": "tree-sitter-typescript", "version": "0.23.2", "wasm": "tree-sitter-tsx.wasm" },
+    { "grammar": "javascript", "package": "tree-sitter-javascript", "version": "0.25.0", "wasm": "tree-sitter-javascript.wasm" },
+    { "grammar": "python", "package": "tree-sitter-python", "version": "0.25.0", "wasm": "tree-sitter-python.wasm" },
+    { "grammar": "go", "package": "tree-sitter-go", "version": "0.25.0", "wasm": "tree-sitter-go.wasm" },
+    { "grammar": "rust", "package": "tree-sitter-rust", "version": "0.24.0", "wasm": "tree-sitter-rust.wasm" },
+    { "grammar": "java", "package": "tree-sitter-java", "version": "0.23.5", "wasm": "tree-sitter-java.wasm" },
+    { "grammar": "c", "package": "tree-sitter-c", "version": "0.24.1", "wasm": "tree-sitter-c.wasm" },
+    { "grammar": "cpp", "package": "tree-sitter-cpp", "version": "0.23.4", "wasm": "tree-sitter-cpp.wasm" },
+    { "grammar": "c_sharp", "package": "tree-sitter-c-sharp", "version": "0.23.5", "wasm": "tree-sitter-c_sharp.wasm" },
+    { "grammar": "ruby", "package": "tree-sitter-ruby", "version": "0.23.1", "wasm": "tree-sitter-ruby.wasm" },
+    { "grammar": "php", "package": "tree-sitter-php", "version": "0.24.2", "wasm": "tree-sitter-php.wasm" },
+    { "grammar": "swift", "package": "tree-sitter-swift", "version": "0.7.1", "build": true },
+    { "grammar": "kotlin", "package": "tree-sitter-kotlin", "version": "0.3.8", "build": true },
+    { "grammar": "scala", "package": "tree-sitter-scala", "version": "0.24.0", "wasm": "tree-sitter-scala.wasm" },
+    { "grammar": "dart", "package": "tree-sitter-dart", "version": "1.0.0", "build": true },
+    { "grammar": "lua", "package": "@tree-sitter-grammars/tree-sitter-lua", "version": "0.4.1", "wasm": "tree-sitter-lua.wasm" },
+    { "grammar": "elixir", "package": "tree-sitter-elixir", "version": "0.3.5", "wasm": "tree-sitter-elixir.wasm" },
+    { "grammar": "ocaml", "package": "tree-sitter-ocaml", "version": "0.24.2", "wasm": "tree-sitter-ocaml.wasm" },
+    { "grammar": "elm", "package": "@elm-tooling/tree-sitter-elm", "version": "5.9.4", "build": true },
+    { "grammar": "zig", "package": "@tree-sitter-grammars/tree-sitter-zig", "version": "1.1.2", "wasm": "tree-sitter-zig.wasm" },
+    { "grammar": "solidity", "package": "tree-sitter-solidity", "version": "1.2.13", "wasm": "tree-sitter-solidity.wasm" },
+    { "grammar": "bash", "package": "tree-sitter-bash", "version": "0.25.1", "wasm": "tree-sitter-bash.wasm" }
+  ]
+}

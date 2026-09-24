@@ -11,7 +11,7 @@ export default defineConfig({
   splitting: true,
   shims: false,
   dts: false,
-  external: ["web-tree-sitter", "tree-sitter-wasms"],
+  external: ["web-tree-sitter"],
   banner: { js: "#!/usr/bin/env node" },
   esbuildOptions(options) {
     options.jsx = "automatic";

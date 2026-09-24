@@ -29,7 +29,7 @@
   },
   "files": [
     "dist",
-    "wasm",
+    "grammars",
     "README.md",
     "LICENSE"
   ],
@@ -59,8 +59,7 @@
     "react": "^19.2.0",
     "terminal-link": "^3.0.0",
     "tinyglobby": "^0.2.10",
-    "tree-sitter-wasms": "^0.1.12",
-    "web-tree-sitter": "^0.24.5"
+    "web-tree-sitter": "^0.26.13"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

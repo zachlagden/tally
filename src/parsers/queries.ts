@@ -146,7 +146,7 @@ QUERIES.csharp = `
 (field_declaration) @variable
 (if_statement) @branch
 (for_statement) @branch
-(for_each_statement) @branch
+(foreach_statement) @branch
 (while_statement) @branch
 (do_statement) @branch
 (switch_section) @branch
@@ -178,7 +178,7 @@ QUERIES.php = `
 (function_definition) @function
 (method_declaration) @function
 (arrow_function) @function
-(anonymous_function_creation_expression) @function
+(anonymous_function) @function
 (class_declaration) @class
 (interface_declaration) @class
 (trait_declaration) @class
@@ -244,11 +244,13 @@ QUERIES.bash = `
 `;
 
 QUERIES.dart = `
-(function_signature) @function
-(method_signature) @function
+(function_body) @function
+(function_expression) @function
 (class_definition) @class
 (mixin_declaration) @class
 (initialized_variable_definition) @variable
+(initialized_identifier) @variable
+(static_final_declaration) @variable
 (if_statement) @branch
 (for_statement) @branch
 (while_statement) @branch
@@ -257,14 +259,12 @@ QUERIES.dart = `
 `;
 
 QUERIES.lua = `
-(function_definition_statement) @function
-(local_function_definition_statement) @function
+(function_declaration) @function
 (function_definition) @function
-(local_variable_declaration) @variable
+(variable_declaration) @variable
 (if_statement) @branch
-(elseif_clause) @branch
-(for_generic_statement) @branch
-(for_numeric_statement) @branch
+(elseif_statement) @branch
+(for_statement) @branch
 (while_statement) @branch
 (repeat_statement) @branch
 `;
@@ -288,8 +288,9 @@ QUERIES.ocaml = `
 QUERIES.elm = `
 (value_declaration) @function
 (type_declaration) @class
-(if_expression) @branch
-(case_of_expression) @branch
+(type_alias_declaration) @class
+(if_else_expr) @branch
+(case_of_branch) @branch
 `;
 
 QUERIES.zig = `

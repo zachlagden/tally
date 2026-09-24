@@ -46,6 +46,7 @@ jobs:
           - { repo: BurntSushi/ripgrep, ref: 14.1.1, language: rust }
           - { repo: google/gson, ref: gson-parent-2.11.0, language: java }
           - { repo: sinatra/sinatra, ref: v4.1.1, language: ruby }
+          - { repo: nvm-sh/nvm, ref: v0.40.3, language: bash }
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
