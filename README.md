@@ -117,13 +117,11 @@ Fields are trimmed here. Files over 1 MB are still line-counted but skip symbol 
 ## Languages
 
 **Parsed with tree-sitter** (functions, classes, variables, complexity):
-TypeScript, TSX, JavaScript, Python, Go, Rust, Java, C, C++, C#, Ruby, PHP, Swift, Kotlin, Scala, Lua, Elixir, OCaml, Solidity, Zig, Shell, and Vue (its `<script>` block, with the JavaScript or TypeScript grammar).
+TypeScript, TSX, JavaScript, Python, Go, Rust, Java, C, C++, C#, Ruby, PHP, Swift, Kotlin, Scala, Dart, Lua, Elixir, OCaml, Elm, Solidity, Zig, Shell, and Vue (its `<script>` block, with the JavaScript or TypeScript grammar).
 
 **Parsed with regex fallbacks:** Haskell, SQL, R, Perl, SCSS.
 
 **Line counts only:** JSON, YAML, TOML, HTML, CSS, Markdown, Dockerfile, Makefile.
-
-**Line counts now, symbols in progress:** Dart and Elm. Their grammars need a newer tree-sitter runtime than the one bundled, so their symbol counts read zero.
 
 Every language has a fixture in [`test/fixtures/languages`](test/fixtures/languages) with hand-checked line and symbol counts, and CI fails if any of them drift.
 
@@ -131,15 +129,22 @@ Complexity is a cyclomatic-style score: one per function plus one per branch (`i
 
 ## Performance
 
-Measured on an Intel i7-10750H (6 cores) under WSL2 with Node 22, `--json --no-git`:
+Measured on an Intel i7-10750H (6 cores, 12 threads) under WSL2 with Node 22. Each repo is a shallow clone at the tag shown, scanned with `--json --no-git` one at a time. Times are the median of three runs; `--no-symbols` is a single run.
 
-| Repository | Files | Time |
-| --- | --: | --: |
-| tally itself | 42 | about 0.3 s |
-| [ppy/osu](https://github.com/ppy/osu), 591k lines of C# | 4,968 | 3.5 to 4 s |
-| ppy/osu with `--no-symbols` | 4,968 | 1.4 s |
+| Repository | Main language | Files | Lines | Functions | Time | `--no-symbols` | Peak memory |
+| --- | --- | --: | --: | --: | --: | --: | --: |
+| [django/django](https://github.com/django/django) 6.1.1 | Python | 3,469 | 545k | 33,725 | 2.0 s | 1.0 s | 391 MB |
+| [rails/rails](https://github.com/rails/rails) 8.1.3.1 | Ruby | 3,883 | 638k | 76,717 | 2.2 s | 1.0 s | 460 MB |
+| [ppy/osu](https://github.com/ppy/osu) 2026.921.0 | C# | 4,968 | 600k | 54,535 | 2.9 s | 1.2 s | 539 MB |
+| [facebook/react](https://github.com/facebook/react) 19.3.0 | JavaScript | 6,959 | 1.0M | 51,486 | 3.2 s | 1.4 s | 525 MB |
+| [microsoft/vscode](https://github.com/microsoft/vscode) 1.139.0 | TypeScript | 16,527 | 5.3M | 304,551 | 12.5 s | 2.1 s | 864 MB |
+| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) 1.37.1 | Go | 21,662 | 5.4M | 157,963 | 12.3 s | 4.5 s | 681 MB |
+| [rust-lang/rust](https://github.com/rust-lang/rust) 1.98.1 | Rust | 39,372 | 4.9M | 222,351 | 16.3 s | 4.2 s | 793 MB |
+| [torvalds/linux](https://github.com/torvalds/linux) 7.3-rc4 | C | 76,747 | 39.6M | 792,701 | 93 s | 9.9 s | 1.1 GB |
 
-Nearly all of the osu time is tree-sitter parsing 23 MB of C#. `tally --version` starts in about 70 ms because the TUI libraries only load when something is drawn.
+Every scan finished with no skipped files and no parse timeouts. Parsing is most of the cost: `--no-symbols` is 2 to 9 times faster. Linux, with 1.5 GB of source, ranged from 74 s to 107 s across its three runs.
+
+`tally --version` starts in about 70 ms because the TUI libraries only load when something is drawn.
 
 ## How it works
 
@@ -147,7 +152,9 @@ Nearly all of the osu time is tree-sitter parsing 23 MB of C#. `tally --version`
 2. Files are sorted by language and handed out in batches, so each worker thread loads only the grammars it needs.
 3. Each worker reads a file, counts its lines, and runs a tree-sitter query that tags functions, classes, variables and branches.
 4. The main thread aggregates the results while `git shortlog` and `git rev-list` run in parallel.
-5. V8 runs the WebAssembly grammars with its baseline compiler (`--liftoff-only`). A short-lived CLI never wins back the time the optimising compiler spends on grammars this size.
+5. Grammars are WebAssembly builds from each language's official npm package, vendored in [`grammars/`](grammars) with their licences. `node scripts/update-grammars.mjs` rebuilds the folder from the pinned versions in `grammars/manifest.json`.
+6. Scans of up to 1,000 files run the grammars on V8's baseline compiler (Liftoff), which starts fast. Larger scans use the optimising compiler (TurboFan), which costs a few seconds to warm up and then parses 25 to 40% faster. Set `TALLY_WASM_TIER=liftoff` or `turbofan` to force one.
+7. If one file takes longer than `--parse-timeout` to parse, its worker is replaced and the file is line-counted without symbols, so a pathological file can't stall the scan.
 
 ## FAQ
 
@@ -169,7 +176,7 @@ cloc and tokei count lines: code, comments and blanks. tally counts those too, t
 <details>
 <summary><b>Why do some languages show no functions?</b></summary>
 
-Data and markup formats have none to count. Dart and Elm should, and are listed under [Languages](#languages) as in progress.
+JSON, YAML, TOML, HTML, CSS, Markdown, Dockerfiles and Makefiles have none to count, so tally only counts their lines.
 </details>
 
 <details>
